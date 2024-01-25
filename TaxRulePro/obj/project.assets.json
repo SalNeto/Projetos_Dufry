@@ -475,6 +475,32 @@
           "buildTransitive/net6.0/_._": {}
         }
       },
+      "System.Diagnostics.EventLog/7.0.0": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/System.Diagnostics.EventLog.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/System.Diagnostics.EventLog.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net6.0/System.Diagnostics.EventLog.Messages.dll": {
+            "assetType": "runtime",
+            "rid": "win"
+          },
+          "runtimes/win/lib/net6.0/System.Diagnostics.EventLog.dll": {
+            "assetType": "runtime",
+            "rid": "win"
+          }
+        }
+      },
       "System.Diagnostics.Tools/4.3.0": {
         "type": "package",
         "dependencies": {
@@ -1340,6 +1366,31 @@
             "rid": "unix"
           },
           "runtimes/win/lib/netstandard1.6/System.Security.Cryptography.X509Certificates.dll": {
+            "assetType": "runtime",
+            "rid": "win"
+          }
+        }
+      },
+      "System.ServiceProcess.ServiceController/7.0.1": {
+        "type": "package",
+        "dependencies": {
+          "System.Diagnostics.EventLog": "7.0.0"
+        },
+        "compile": {
+          "lib/net6.0/System.ServiceProcess.ServiceController.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/System.ServiceProcess.ServiceController.dll": {
+            "related": ".xml"
+          }
+        },
+        "build": {
+          "buildTransitive/net6.0/_._": {}
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net6.0/System.ServiceProcess.ServiceController.dll": {
             "assetType": "runtime",
             "rid": "win"
           }
@@ -2400,6 +2451,39 @@
         "lib/netstandard2.0/System.Diagnostics.DiagnosticSource.xml",
         "system.diagnostics.diagnosticsource.7.0.2.nupkg.sha512",
         "system.diagnostics.diagnosticsource.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
+    "System.Diagnostics.EventLog/7.0.0": {
+      "sha512": "eUDP47obqQm3SFJfP6z+Fx2nJ4KKTQbXB4Q9Uesnzw9SbYdhjyoGXuvDn/gEmFY6N5Z3bFFbpAQGA7m6hrYJCw==",
+      "type": "package",
+      "path": "system.diagnostics.eventlog/7.0.0",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.Diagnostics.EventLog.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net6.0/_._",
+        "buildTransitive/netcoreapp2.0/System.Diagnostics.EventLog.targets",
+        "lib/net462/System.Diagnostics.EventLog.dll",
+        "lib/net462/System.Diagnostics.EventLog.xml",
+        "lib/net6.0/System.Diagnostics.EventLog.dll",
+        "lib/net6.0/System.Diagnostics.EventLog.xml",
+        "lib/net7.0/System.Diagnostics.EventLog.dll",
+        "lib/net7.0/System.Diagnostics.EventLog.xml",
+        "lib/netstandard2.0/System.Diagnostics.EventLog.dll",
+        "lib/netstandard2.0/System.Diagnostics.EventLog.xml",
+        "runtimes/win/lib/net6.0/System.Diagnostics.EventLog.Messages.dll",
+        "runtimes/win/lib/net6.0/System.Diagnostics.EventLog.dll",
+        "runtimes/win/lib/net6.0/System.Diagnostics.EventLog.xml",
+        "runtimes/win/lib/net7.0/System.Diagnostics.EventLog.Messages.dll",
+        "runtimes/win/lib/net7.0/System.Diagnostics.EventLog.dll",
+        "runtimes/win/lib/net7.0/System.Diagnostics.EventLog.xml",
+        "system.diagnostics.eventlog.7.0.0.nupkg.sha512",
+        "system.diagnostics.eventlog.nuspec",
         "useSharedDesignerContext.txt"
       ]
     },
@@ -4600,6 +4684,37 @@
         "system.security.cryptography.x509certificates.nuspec"
       ]
     },
+    "System.ServiceProcess.ServiceController/7.0.1": {
+      "sha512": "rPfXTJzYU46AmWYXRATQzQQ01hICrkl3GuUHgpAr9mnUwAVSsga5x3mBxanFPlJBV9ilzqMXbQyDLJQAbyTnSw==",
+      "type": "package",
+      "path": "system.serviceprocess.servicecontroller/7.0.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "Icon.png",
+        "LICENSE.TXT",
+        "THIRD-PARTY-NOTICES.TXT",
+        "buildTransitive/net461/System.ServiceProcess.ServiceController.targets",
+        "buildTransitive/net462/_._",
+        "buildTransitive/net6.0/_._",
+        "buildTransitive/netcoreapp2.0/System.ServiceProcess.ServiceController.targets",
+        "lib/net462/System.ServiceProcess.ServiceController.dll",
+        "lib/net462/System.ServiceProcess.ServiceController.xml",
+        "lib/net6.0/System.ServiceProcess.ServiceController.dll",
+        "lib/net6.0/System.ServiceProcess.ServiceController.xml",
+        "lib/net7.0/System.ServiceProcess.ServiceController.dll",
+        "lib/net7.0/System.ServiceProcess.ServiceController.xml",
+        "lib/netstandard2.0/System.ServiceProcess.ServiceController.dll",
+        "lib/netstandard2.0/System.ServiceProcess.ServiceController.xml",
+        "runtimes/win/lib/net6.0/System.ServiceProcess.ServiceController.dll",
+        "runtimes/win/lib/net6.0/System.ServiceProcess.ServiceController.xml",
+        "runtimes/win/lib/net7.0/System.ServiceProcess.ServiceController.dll",
+        "runtimes/win/lib/net7.0/System.ServiceProcess.ServiceController.xml",
+        "system.serviceprocess.servicecontroller.7.0.1.nupkg.sha512",
+        "system.serviceprocess.servicecontroller.nuspec",
+        "useSharedDesignerContext.txt"
+      ]
+    },
     "System.Text.Encoding/4.3.0": {
       "sha512": "BiIg+KWaSDOITze6jGQynxg64naAPtqGHBwDrLaCtixsa5bKiR8dpPOHA7ge3C0JJQizJE+sfkz1wV+BAKAYZw==",
       "type": "package",
@@ -5294,6 +5409,7 @@
       "System.Net.WebHeaderCollection >= 4.3.0",
       "System.Reflection.Metadata >= 7.0.2",
       "System.Runtime >= 4.3.1",
+      "System.ServiceProcess.ServiceController >= 7.0.1",
       "System.Text.Encoding >= 4.3.0",
       "System.Text.RegularExpressions >= 4.3.1",
       "System.Threading.Tasks >= 4.3.0"
@@ -5306,11 +5422,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Projetos Coorporate\\Atualizacao Calculadora C-One\\TaxRulePro\\TaxRulePro\\TaxRulePro.csproj",
+      "projectUniqueName": "C:\\Projetos Coorporate\\Aplicador - TaxRulePro\\TaxRulePro\\TaxRulePro\\TaxRulePro.csproj",
       "projectName": "TaxRulePro",
-      "projectPath": "C:\\Projetos Coorporate\\Atualizacao Calculadora C-One\\TaxRulePro\\TaxRulePro\\TaxRulePro.csproj",
+      "projectPath": "C:\\Projetos Coorporate\\Aplicador - TaxRulePro\\TaxRulePro\\TaxRulePro\\TaxRulePro.csproj",
       "packagesPath": "C:\\Users\\salnet\\.nuget\\packages\\",
-      "outputPath": "C:\\Projetos Coorporate\\Atualizacao Calculadora C-One\\TaxRulePro\\TaxRulePro\\obj\\",
+      "outputPath": "C:\\Projetos Coorporate\\Aplicador - TaxRulePro\\TaxRulePro\\TaxRulePro\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -5406,6 +5522,10 @@
           "System.Runtime": {
             "target": "Package",
             "version": "[4.3.1, )"
+          },
+          "System.ServiceProcess.ServiceController": {
+            "target": "Package",
+            "version": "[7.0.1, )"
           },
           "System.Text.Encoding": {
             "target": "Package",

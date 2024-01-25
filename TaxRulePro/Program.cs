@@ -5,6 +5,8 @@ using System.Text.Json;
 using System.Reflection.Metadata;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Runtime.InteropServices;
+using System.ServiceProcess;
 
 class Program
 {
@@ -15,7 +17,7 @@ class Program
 
     static string[] group2Folders = {
         @"C:\Temp_Arq_Calc_Tax\Arq_Sovos\Responser\Processed",
-        @"C:\Temp_Arq_Calc_Tax\Arq_Cone\IN\Erro",
+       /// @"C:\Temp_Arq_Calc_Tax\Arq_Cone\IN\Erro",
         @"C:\Temp_Arq_Calc_Tax\Arq_Cone\IN\Processed"
     };
 
@@ -31,35 +33,127 @@ class Program
     static DateTime lastDeletionTimeG1 = DateTime.MinValue;
     static DateTime lastDeletionTimeG2 = DateTime.MinValue;
     static DateTime lastDeletionTimeG3 = DateTime.MinValue;
-   
-    static void Main()
+
+    static void Main(string[] args)
     {
-        using (StreamWriter logWriter = new StreamWriter(logFilePath, true))
+        if (Environment.UserInteractive)
         {
-            program0Timer = new Timer(state =>
+            using (StreamWriter logWriter = new StreamWriter(logFilePath, true))
             {
-                // Iniciar o Program0
-                Start10minutos(logWriter);
-                CleanProgram4Horas(logWriter);
+                program0Timer = new Timer(state =>
+                {
+                    // Iniciar o Program0
+                    Start10minutos(logWriter);
+                    CleanProgram4Horas(logWriter);
 
-                // Desligar o Program2
-                StopProgram0(logWriter);
+                    // Desligar o Program2
+                    // StopProgram0(logWriter);
 
-                // Agendar o próximo desligamento do Program0
-                ScheduleProgram0Shutdown(logWriter);
-            }, logWriter, TimeSpan.Zero, TimeSpan.FromDays(1));
+                    // Agendar o próximo desligamento do Program0
+                    ScheduleProgram0Shutdown(logWriter);
+                }, logWriter, TimeSpan.Zero, TimeSpan.FromDays(1));
 
-            Console.WriteLine("Pressione Enter para sair...");
-            Console.ReadLine();
+                Console.WriteLine("Pressione Enter para sair...");
+                Console.ReadLine();
 
-            program0Timer.Dispose();
+                program0Timer.Dispose();
+            }
+
+        }
+        else
+        {
+            ServiceBase.Run(new TaxService());
+        }
+    }
+
+    public class TaxService : ServiceBase
+    {
+        private StreamWriter logWriter;
+        private Timer program0Timer;
+        private CancellationTokenSource cancellationTokenSource;
+
+        public TaxService()
+        {
+            ServiceName = "TaxService";
         }
 
+        protected override void OnStart(string[] args)
+        {
+            logWriter = new StreamWriter(logFilePath, true);
+            cancellationTokenSource = new CancellationTokenSource();
 
+            program0Timer = new Timer(state =>
+            {
+                try
+                {
+                    StartProgram0(logWriter);
+                }
+                catch (Exception ex)
+                {
+                    logWriter.WriteLine("Erro: " + ex.ToString());
+                }
+            }, logWriter, TimeSpan.Zero, TimeSpan.FromMinutes(10)); // Altere o intervalo conforme necessário
+
+            // Executar a limpeza a cada 4 horas
+            var cleanupTimer = new Timer(state =>
+            {
+                try
+                {
+                    CleanProgram(logWriter);
+                }
+                catch (Exception ex)
+                {
+                    logWriter.WriteLine("Erro: " + ex.ToString());
+                }
+            }, logWriter, TimeSpan.Zero, TimeSpan.FromHours(4)); // Altere o intervalo conforme necessário
+        }
+
+        protected override void OnStop()
+        {
+            // Sinaliza o cancelamento das tarefas em andamento
+            cancellationTokenSource?.Cancel();
+
+            // Cancela a execução dos timers
+            program0Timer?.Change(Timeout.Infinite, Timeout.Infinite);
+
+            // Executa o método StopProgram0
+            StopProgram0(logWriter);
+
+            // Aguarda a conclusão das tarefas em andamento (se houver)
+            Task.WhenAll(/*Coloque aqui as tasks que precisam ser aguardadas*/)
+                .ContinueWith(t =>
+                {
+                    // Realiza a limpeza necessária antes de encerrar o serviço.
+                    CleanupBeforeExit(logWriter);
+
+                })
+                .Wait();
+
+            // Encerra o serviço
+            base.OnStop();
+        }
+
+        private static void CleanupBeforeExit(StreamWriter logWriter)
+        {
+            // Implemente a limpeza necessária antes de encerrar o programa.
+            // Por exemplo, finalize processos em execução, feche conexões, etc.
+            StopProgram0(logWriter);
+
+            // Feche o logWriter antes de sair
+            logWriter.Dispose();
+
+            // Exiba uma mensagem de encerramento do programa, se necessário
+            Console.WriteLine("Encerrando o programa. Pressione Enter novamente para sair...");
+        }
     }
 
 
-    
+
+
+
+
+
+
 
 
 
@@ -131,14 +225,14 @@ class Program
     }
 
 
-    static async Task RunProcesses3Async(StreamWriter logWriter, CancellationToken cancellationToken)
+    static async Task RunProcesses3Async(CancellationToken cancellationToken)
     {
         if (DateTime.Now.Subtract(lastDeletionTimeG1).TotalHours >= 1)
         {
             foreach (string folderPath in group1Folders)
             {
-                await DeleteFilesInFolderAsync(folderPath, logWriter);
-                Console.WriteLine(logWriter); // Adiciona a linha no console
+                await DeleteFilesInFolderAsync(folderPath);
+                // Console.WriteLine(logWriter); // Adiciona a linha no console
             }
             lastDeletionTimeG1 = DateTime.Now;
         }
@@ -147,8 +241,8 @@ class Program
         {
             foreach (string folderPath in group2Folders)
             {
-                await DeleteFilesInFolderAsync(folderPath, logWriter);
-                Console.WriteLine(logWriter); // Adiciona a linha no console
+                await DeleteFilesInFolderAsync(folderPath);
+                // Console.WriteLine(logWriter); // Adiciona a linha no console
             }
             lastDeletionTimeG2 = DateTime.Now;
         }
@@ -156,7 +250,7 @@ class Program
         // Verifica se o cancelamento foi solicitado
         if (cancellationToken.IsCancellationRequested)
         {
-            logWriter.WriteLine("RunProcesses3Async canceled.");
+            //logWriter.WriteLine("RunProcesses3Async canceled.");
             Console.WriteLine("RunProcesses3Async canceled.");
             return;
         }
@@ -168,74 +262,89 @@ class Program
     {
         const long MAX_LOG_SIZE = 1000000; // Tamanho máximo do arquivo de log em bytes
 
+        string processName = Path.GetFileNameWithoutExtension(fileName);
+
+        // Verificar se o processo já está em execução
+        if (IsProcessRunning(processName))
+        {
+            logWriter.WriteLine($"Process {processName} is already running.");
+            return;
+        }
+
         try
         {
-            while (true)
+            ProcessStartInfo startInfo = new ProcessStartInfo();
+            startInfo.FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
+            startInfo.RedirectStandardOutput = true;
+            startInfo.RedirectStandardError = true; // Redireciona a saída de erro
+            startInfo.UseShellExecute = false;
+
+            using (Process process = new Process())
             {
-                ProcessStartInfo startInfo = new ProcessStartInfo();
-                startInfo.FileName = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, fileName);
-                startInfo.RedirectStandardOutput = true;
-                startInfo.RedirectStandardError = true; // Redireciona a saída de erro
-                startInfo.UseShellExecute = false;
-
-                using (Process process = new Process())
+                process.StartInfo = startInfo;
+                process.OutputDataReceived += (sender, e) =>
                 {
-                    process.StartInfo = startInfo;
-                    process.OutputDataReceived += (sender, e) =>
+                    if (!string.IsNullOrEmpty(e.Data))
                     {
-                        if (!string.IsNullOrEmpty(e.Data))
+                        string logLine = $"{DateTime.Now} [{fileName}] {e.Data}"; // Adiciona a data, nome do executável e a linha de saída
+                        Console.WriteLine(e.Data); // Exibe a saída padrão no console
+
+                        if (!logWriter.BaseStream.CanWrite)
                         {
-                            string logLine = $"{DateTime.Now} [{fileName}] {e.Data}"; // Adiciona a data, nome do executável e a linha de saída
-                            Console.WriteLine(e.Data); // Exibe a saída padrão no console
-
-                            if (logWriter.BaseStream.Length + logLine.Length < MAX_LOG_SIZE)
-                            {
-                                logWriter.WriteLine(logLine); // Grava a saída padrão no arquivo de log
-                            }
-                            else
-                            {
-                                // Realize a ação apropriada, como criar um novo arquivo de log ou arquivar o arquivo existente
-                                // Exemplo: logWriter.Dispose(); e criar um novo StreamWriter para um novo arquivo de log
-                            }
+                            return; // O StreamWriter foi fechado, não escreva mais no arquivo de log
                         }
-                    };
 
-                    process.ErrorDataReceived += (sender, e) =>
-                    {
-                        if (!string.IsNullOrEmpty(e.Data))
+                        if (logWriter.BaseStream.Length + logLine.Length < MAX_LOG_SIZE)
                         {
-                            string logLine = $"{DateTime.Now} [{fileName}] ERROR: {e.Data}"; // Adiciona a data, nome do executável e a linha de erro
-                            Console.WriteLine(e.Data); // Exibe o erro no console
-
-                            if (logWriter.BaseStream.Length + logLine.Length < MAX_LOG_SIZE)
-                            {
-                                logWriter.WriteLine(logLine); // Grava o erro no arquivo de log
-                            }
-                            else
-                            {
-                                // Realize a ação apropriada, como criar um novo arquivo de log ou arquivar o arquivo existente
-                                // Exemplo: logWriter.Dispose(); e criar um novo StreamWriter para um novo arquivo de log
-                            }
+                            logWriter.WriteLine(logLine); // Grava a saída padrão no arquivo de log
                         }
-                    };
-
-                    process.Start();
-                    process.BeginOutputReadLine();
-                    process.BeginErrorReadLine(); // Inicia a leitura da saída de erro
-
-                    // Aguarde o token de cancelamento ou o tempo limite antes de encerrar o processo
-                    await Task.WhenAny(Task.Delay(60000, cancellationToken), process.WaitForExitAsync());
-
-                    if (cancellationToken.IsCancellationRequested)
-                    {
-                        process.Kill(); // Encerra o processo
-                        logWriter.WriteLine($"[{fileName}] Application killed at {DateTime.Now}");
+                        else
+                        {
+                            // Realize a ação apropriada, como criar um novo arquivo de log ou arquivar o arquivo existente
+                            // Exemplo: logWriter.Dispose(); e criar um novo StreamWriter para um novo arquivo de log
+                        }
                     }
-                    else
+                };
+
+                process.ErrorDataReceived += (sender, e) =>
+                {
+                    if (!string.IsNullOrEmpty(e.Data))
                     {
-                        logWriter.WriteLine($"[{fileName}] Processo encerrado.");
-                        break; // Encerra o loop
+                        string logLine = $"{DateTime.Now} [{fileName}] ERROR: {e.Data}"; // Adiciona a data, nome do executável e a linha de erro
+                        Console.WriteLine(e.Data); // Exibe o erro no console
+
+                        if (!logWriter.BaseStream.CanWrite)
+                        {
+                            return; // O StreamWriter foi fechado, não escreva mais no arquivo de log
+                        }
+
+                        if (logWriter.BaseStream.Length + logLine.Length < MAX_LOG_SIZE)
+                        {
+                            logWriter.WriteLine(logLine); // Grava o erro no arquivo de log
+                        }
+                        else
+                        {
+                            // Realize a ação apropriada, como criar um novo arquivo de log ou arquivar o arquivo existente
+                            // Exemplo: logWriter.Dispose(); e criar um novo StreamWriter para um novo arquivo de log
+                        }
                     }
+                };
+
+                process.Start();
+                process.BeginOutputReadLine();
+                process.BeginErrorReadLine(); // Inicia a leitura da saída de erro
+
+                // Aguarde o token de cancelamento ou um atraso específico antes de encerrar o processo
+                await Task.WhenAny(Task.Delay(60000, cancellationToken), process.WaitForExitAsync());
+
+                if (cancellationToken.IsCancellationRequested)
+                {
+                    process.Kill(); // Encerra o processo
+                    logWriter.WriteLine($"[{fileName}] Application killed at {DateTime.Now}");
+                }
+                else
+                {
+                    logWriter.WriteLine($"[{fileName}] Processo encerrado.");
                 }
             }
         }
@@ -243,6 +352,24 @@ class Program
         {
             logWriter.WriteLine($"Error running process for file {fileName}: {ex.Message}");
         }
+        //finally
+        //{
+        //    logWriter.Dispose(); // Libera os recursos do StreamWriter
+        //}
+    }
+
+    static string GetNewLogFileName(string fileName)
+    {
+        string baseDirectory = Path.GetDirectoryName(fileName);
+        string baseFileName = Path.GetFileNameWithoutExtension(fileName);
+        string newFileName = $"{baseFileName}_{DateTime.Now:yyyyMMddHHmmss}.log"; // Cria um novo nome de arquivo baseado na data e hora atual
+        return Path.Combine(baseDirectory, newFileName); // Retorna o caminho completo para o novo arquivo de log
+    }
+
+    static bool IsProcessRunning(string processName)
+    {
+        Process[] processes = Process.GetProcessesByName(processName);
+        return processes.Length > 0;
     }
 
 
@@ -261,11 +388,12 @@ class Program
     }
 
 
+
     static async Task CleanProgram4Horas(StreamWriter logWriter)
     {
         while (true)
         {
-          
+
             await CleanProgram(logWriter);
             TimeSpan delayInterval = TimeSpan.FromHours(4); ////----> alterar para 4 horas quando aplicar em prd
             await Task.Delay(delayInterval);
@@ -279,20 +407,20 @@ class Program
 
     static async Task StartProgram0(StreamWriter logWriter)
     {
-        CancellationToken cancellationToken = CancellationToken.None; // Adicione esta linha para fornecer um token de cancelamento válido     
+        CancellationToken cancellationToken = CancellationToken.None;
 
-        RunProcess(logWriter, "Versao_Regra_DF.exe", cancellationToken);
-        RunProcess(logWriter, "Versao_Regra_DP.exe", cancellationToken);
-
-        RunProcess(logWriter, "Divisao_Direta.exe", cancellationToken);
-        RunProcess(logWriter, "Back Office DP Transf API Sovos.exe", cancellationToken);
-        RunProcess(logWriter, "Front Office - Transf API Sovos.exe", cancellationToken);
-        RunProcess(logWriter, "Back Office DF Transf API Sovos.exe", cancellationToken);
-        RunProcess(logWriter, "Consulta API Sovos.exe", cancellationToken);
-        RunProcess(logWriter, "Consulta API Sovos Duty Free.exe", cancellationToken);
-        RunProcess(logWriter, "Transformação_C_One.exe", cancellationToken);
-        RunProcess(logWriter, "Grava_API_COne.exe", cancellationToken);
-
+        await Task.WhenAll(
+            RunProcess(logWriter, "Versao_Regra_DF.exe", cancellationToken),
+            RunProcess(logWriter, "Versao_Regra_DP.exe", cancellationToken),
+            RunProcess(logWriter, "Divisao_Direta.exe", cancellationToken),
+            RunProcess(logWriter, "Back Office DP Transf API Sovos.exe", cancellationToken),
+            RunProcess(logWriter, "Front Office - Transf API Sovos.exe", cancellationToken),
+            RunProcess(logWriter, "Back Office DF Transf API Sovos.exe", cancellationToken),
+            RunProcess(logWriter, "Consulta API Sovos.exe", cancellationToken),
+            RunProcess(logWriter, "Consulta API Sovos Duty Free.exe", cancellationToken),
+            RunProcess(logWriter, "Transformação_C_One.exe", cancellationToken),
+            RunProcess(logWriter, "Grava_API_COne.exe", cancellationToken)
+        );
     }
     static async Task CleanProgram(StreamWriter logWriter)
     {
@@ -302,7 +430,7 @@ class Program
         logWriter.WriteLine($"Pausa para otimizacao de espaco em disco.");
         Console.WriteLine($"Pausa para otimizacao de espaco em disco.");
         cancellationTokenSource = new CancellationTokenSource();
-        await RunProcesses3Async(logWriter, cancellationTokenSource.Token);
+        await RunProcesses3Async(cancellationTokenSource.Token);
         logWriter.WriteLine($"Otimizacao concluida.");
         Console.WriteLine($"Otimizacao concluida.");
     }
@@ -311,13 +439,16 @@ class Program
 
     static CancellationTokenSource cancellationTokenSource;
 
+
     static void StopProgram0(StreamWriter logWriter)
     {
-        
+
         // Forçar o desligamento do Program0
+        cancellationTokenSource?.Cancel();
+
         StopProcess(logWriter, "Versao_Regra_DF.exe");
         StopProcess(logWriter, "Versao_Regra_DP.exe");
-        
+
         StopProcess(logWriter, "Front Office - Transf API Sovos.exe");
         StopProcess(logWriter, "Back Office DP Transf API Sovos.exe");
         StopProcess(logWriter, "Back Office DF Transf API Sovos.exe");
@@ -336,6 +467,7 @@ class Program
 
 
 
+
     private static async Task<bool> IsDirectoryEmptyAsync(string directoryPath)
     {
         DirectoryInfo directory = new DirectoryInfo(directoryPath);
@@ -345,26 +477,17 @@ class Program
 
 
 
-
-
-
-
-
-
-
-
-
-    private static async Task DeleteFilesInFolderAsync(string folderPath, StreamWriter logWriter)
+    private static async Task DeleteFilesInFolderAsync(string folderPath)
     {
         bool success = false;
         int maxRetries = 3;
-        int retryDelayMilliseconds = 100;
 
         try
         {
             DirectoryInfo dirInfo = new DirectoryInfo(folderPath);
+            var files = dirInfo.GetFiles();
 
-            foreach (FileInfo file in dirInfo.GetFiles())
+            await Task.WhenAll(files.Select(async file =>
             {
                 int retryCount = 0;
                 bool retry = true;
@@ -373,82 +496,59 @@ class Program
                 {
                     try
                     {
-                        using (FileStream fileStream = file.Open(FileMode.Open, FileAccess.ReadWrite, FileShare.None))
-                        {
-                            // O arquivo não está em uso, pode ser excluído
-                            file.Delete();
-                            logWriter.WriteLine($"Deleted file: {file.FullName}");
-                            Console.WriteLine($"Deleted file: {file.FullName}");
-                        }
+                        File.Delete(file.FullName);
                         success = true;
                         retry = false;
-                        break; // Sai do loop em caso de sucesso
+                        break;
                     }
                     catch (IOException)
                     {
-                        // O arquivo está em uso, não pode ser excluído
-                        //logWriter.WriteLine($"Arquivo ignorado (em uso): {file.FullName}");
-                        ///Console.WriteLine($"Arquivo ignorado (em uso): {file.FullName}");
                         retryCount++;
-                        Thread.Sleep(retryDelayMilliseconds);
                         file.Delete();
-                        logWriter.WriteLine($"Arquivo em uso - deletado depois de uma espera de 100 milissegundos: {file.FullName}");
-                        Console.WriteLine($"Arquivo em uso - deletado depois de uma espera de 100 milissegundos: {file.FullName}");
                     }
                     catch (UnauthorizedAccessException)
                     {
-                        // O acesso ao arquivo foi negado, tenta novamente após um intervalo de tempo
-                        logWriter.WriteLine($"Access to file denied: {file.FullName}");
-                        Console.WriteLine($"Access to file denied: {file.FullName}");
                         retryCount++;
-                        Thread.Sleep(retryDelayMilliseconds);
                     }
-                    catch (Exception ex)
+                    catch
                     {
-                        logWriter.WriteLine($"Error deleting file {file.FullName}: {ex.Message}");
-                        Console.WriteLine($"Error deleting file {file.FullName}: {ex.Message}");
                         retry = false;
                         break;
                     }
                 }
+            }));
 
-                if (retryCount >= maxRetries)
-                {
-                    // Excedeu o número máximo de tentativas, inicia o processo de delete
-                    // Aqui você pode chamar o método ou a lógica para tratar a situação de erro contínuo
-                    logWriter.WriteLine($"Failed to delete file after {maxRetries} retries: {file.FullName}");
-                    Console.WriteLine($"Failed to delete file after {maxRetries} retries: {file.FullName}");
-                    // Chame o método ou lógica adequada para lidar com o erro contínuo, como iniciar o processo de delete novamente
-                    // Exemplo: StartDeleteProcess();
-                }
-            }
+            // Não é mais necessário excluir os diretórios recursivamente, já que queremos mantê-los
 
-            foreach (DirectoryInfo dir in dirInfo.GetDirectories())
-            {
-                dir.Delete(true);
-                logWriter.WriteLine($"Deleted directory: {dir.FullName}");
-                Console.WriteLine($"Deleted directory: {dir.FullName}");
-            }
+            /// await Task.WhenAll(dirInfo.GetDirectories().Select(dir => DeleteFilesInFolderAsync(dir.FullName)));
 
-            logWriter.WriteLine($"Deleted files in folder: {folderPath}");
-            Console.WriteLine($"Deleted files in folder: {folderPath}");
+            /// dirInfo.Delete();
         }
-        catch (Exception ex)
+        catch
         {
-            logWriter.WriteLine($"Error deleting files in folder {folderPath}: {ex.Message}");
-            Console.WriteLine($"Error deleting files in folder {folderPath}: {ex.Message}");
         }
 
         if (!success)
         {
-            // Ainda não foi possível acessar inicie o processo de delete.
-            // Aqui você pode chamar o método ou a lógica para tratar a situação de erro contínuo
-            logWriter.WriteLine($"Failed to delete files in folder: {folderPath}");
-            Console.WriteLine($"Failed to delete files in folder: {folderPath}");
-            // Chame o método ou lógica adequada para lidar com o erro contínuo, como iniciar o processo de delete novamente
-            // Exemplo: StartDeleteProcess();
+            // Lidar com a falha, se necessário
         }
     }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -493,7 +593,6 @@ class Program
 
 
 
-
     static async Task StopProcess(StreamWriter logWriter, string processName)
     {
         Process[] processes = Process.GetProcessesByName(Path.GetFileNameWithoutExtension(processName));
@@ -505,22 +604,21 @@ class Program
                 process.CloseMainWindow(); // Tenta fechar a janela principal do processo
                 await Task.Delay(500); // Aguarda um tempo para que o processo possa responder
 
-                if (!process.HasExited)
-                {
-                    process.Close(); // Fecha o processo (encerramento suave)
-                    await Task.Delay(500); // Aguarda um tempo para que o processo possa encerrar
-                }
 
-                if (!process.HasExited)
-                {
-                    process.Kill(); // Caso o encerramento suave não tenha funcionado, faz um encerramento forçado
-                    process.WaitForExit();
-                }
+                process.Close(); // Fecha o processo (encerramento suave)
+                await Task.Delay(500); // Aguarda um tempo para que o processo possa encerrar
+
+
+
+                process.Kill(); // Caso o encerramento suave não tenha funcionado, faz um encerramento forçado
+                process.WaitForExit();
+
             }
 
             logWriter.WriteLine($"Process {processName} stopped.");
         }
     }
+
 
 
 
@@ -576,19 +674,6 @@ class Program
             }, null, timeRemaining, TimeSpan.FromMilliseconds(-1));
         }
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

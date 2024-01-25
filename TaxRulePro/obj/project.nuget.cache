@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "dx+0Wm1BvM+wugthEFtF25S3fvvwq+75Y8ZQh91p08pTGuGK6Ddb6VpNQHUCrE6K03Tlq2iO13fp8zo9OhzU6Q==",
+  "dgSpecHash": "hXyF3vocW+f0n6RWlWB/JGpeqH9Rt1q7OLcMp1xB9Wwg4WufhUyUUWHJIByhQt/sa+XKD5gB72j6AK6R6Y7cMA==",
   "success": true,
-  "projectFilePath": "C:\\Projetos Coorporate\\Atualizacao Calculadora C-One\\TaxRulePro\\TaxRulePro\\TaxRulePro.csproj",
+  "projectFilePath": "C:\\Projetos Coorporate\\Aplicador - TaxRulePro\\TaxRulePro\\TaxRulePro\\TaxRulePro.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\salnet\\.nuget\\packages\\microsoft.aspnet.webapi.client\\5.2.9\\microsoft.aspnet.webapi.client.5.2.9.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\microsoft.netcore.platforms\\1.1.1\\microsoft.netcore.platforms.1.1.1.nupkg.sha512",
@@ -38,6 +38,7 @@
     "C:\\Users\\salnet\\.nuget\\packages\\system.console\\4.3.0\\system.console.4.3.0.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\system.diagnostics.debug\\4.3.0\\system.diagnostics.debug.4.3.0.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\system.diagnostics.diagnosticsource\\7.0.2\\system.diagnostics.diagnosticsource.7.0.2.nupkg.sha512",
+    "C:\\Users\\salnet\\.nuget\\packages\\system.diagnostics.eventlog\\7.0.0\\system.diagnostics.eventlog.7.0.0.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\system.diagnostics.tools\\4.3.0\\system.diagnostics.tools.4.3.0.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\system.diagnostics.tracing\\4.3.0\\system.diagnostics.tracing.4.3.0.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\system.drawing.primitives\\4.3.0\\system.drawing.primitives.4.3.0.nupkg.sha512",
@@ -81,6 +82,7 @@
     "C:\\Users\\salnet\\.nuget\\packages\\system.security.cryptography.openssl\\4.3.0\\system.security.cryptography.openssl.4.3.0.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\system.security.cryptography.primitives\\4.3.0\\system.security.cryptography.primitives.4.3.0.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\system.security.cryptography.x509certificates\\4.3.0\\system.security.cryptography.x509certificates.4.3.0.nupkg.sha512",
+    "C:\\Users\\salnet\\.nuget\\packages\\system.serviceprocess.servicecontroller\\7.0.1\\system.serviceprocess.servicecontroller.7.0.1.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\system.text.encoding\\4.3.0\\system.text.encoding.4.3.0.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\system.text.encoding.extensions\\4.3.0\\system.text.encoding.extensions.4.3.0.nupkg.sha512",
     "C:\\Users\\salnet\\.nuget\\packages\\system.text.encodings.web\\7.0.0\\system.text.encodings.web.7.0.0.nupkg.sha512",
